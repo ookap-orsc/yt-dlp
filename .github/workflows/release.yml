@@ -145,52 +145,6 @@ jobs:
     secrets:
       GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
 
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-        with:
-          fetch-depth: 0  # Needed for changelog
-          persist-credentials: false
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
-        with:
-          python-version: '3.14'
-
-      - name: Install Requirements
-        run: |
-          sudo apt -y install pandoc man
-          python -m pip install -U --require-hashes -r "bundle/requirements/pip.txt"
-          python -m pip install -U --require-hashes -r "bundle/requirements/build.txt"
-
-      - name: Prepare
-        env:
-          VERSION: ${{ needs.prepare.outputs.version }}
-          SUFFIX: ${{ needs.prepare.outputs.pypi_suffix }}
-          CHANNEL: ${{ needs.prepare.outputs.channel }}
-          TARGET_REPO: ${{ needs.prepare.outputs.target_repo }}
-        run: |
-          python devscripts/update-version.py -c "${CHANNEL}" -r "${TARGET_REPO}" -s "${SUFFIX}" "${VERSION}"
-          python devscripts/update_changelog.py -vv
-          python devscripts/make_lazy_extractors.py
-
-      - name: Build
-        run: |
-          rm -rf dist/*
-          make pypi-files
-          printf '%s\n\n' \
-            'Official repository: <https://github.com/yt-dlp/yt-dlp>' \
-            '**PS**: Some links in this document will not work since this is a copy of the README.md from Github' > ./README.md.new
-          cat ./README.md >> ./README.md.new && mv -f ./README.md.new ./README.md
-          make clean-cache
-          python -m build --no-isolation .
-
-      - name: Upload artifacts
-        if: github.event.workflow != '.github/workflows/release.yml'  # Reusable workflow_call
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
-        with:
-          name: build-pypi
-          path: |
-            dist/*
-          compression-level: 0
-
   publish:
     name: Publish GitHub release
     needs: [prepare, build]
