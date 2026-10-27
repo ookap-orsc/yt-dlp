@@ -16,11 +16,7 @@ STABLE_REPOSITORY = 'yt-dlp/yt-dlp'
 def setup_variables(environment):
     """
     `environment` must contain these keys:
-        REPOSITORY, INPUTS, PROCESSED, PYPI_PROJECT,
-        SOURCE_PYPI_PROJECT, SOURCE_PYPI_SUFFIX,
-        TARGET_PYPI_PROJECT, TARGET_PYPI_SUFFIX,
-        SOURCE_ARCHIVE_REPO, TARGET_ARCHIVE_REPO,
-        HAS_ARCHIVE_REPO_TOKEN, HAS_RELEASE_KEY
+        REPOSITORY, INPUTS, PROCESSED, HAS_RELEASE_KEY
 
     `INPUTS` must contain these keys:
         prerelease
@@ -76,30 +72,21 @@ def setup_variables(environment):
                 target_repo = REPOSITORY
         if target_repo != REPOSITORY:
             target_repo = environment['TARGET_ARCHIVE_REPO']
-            pypi_project = environment['TARGET_PYPI_PROJECT'] or None
-            pypi_suffix = environment['TARGET_PYPI_SUFFIX'] or None
     else:
         target_tag = source_tag or version
         if source_channel:
             target_repo = source_channel
-            pypi_project = environment['SOURCE_PYPI_PROJECT'] or None
-            pypi_suffix = environment['SOURCE_PYPI_SUFFIX'] or None
         else:
             target_repo = REPOSITORY
 
     if target_repo != REPOSITORY and not json.loads(environment['HAS_ARCHIVE_REPO_TOKEN']):
         return None
 
-    if target_repo == REPOSITORY and not INPUTS['prerelease']:
-        pypi_project = environment['PYPI_PROJECT'] or None
-
     return {
         'channel': resolved_source,
         'version': version,
         'target_repo': target_repo,
         'target_tag': target_tag,
-        'pypi_project': pypi_project,
-        'pypi_suffix': pypi_suffix,
     }
 
 
